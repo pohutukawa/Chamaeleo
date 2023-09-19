@@ -1,13 +1,13 @@
 import copy
 import csv
+import numpy
 import os
 import random
 
-import numpy
-from terminaltables import AsciiTable
 from Chamaeleo.methods.default import AbstractCodingAlgorithm, AbstractErrorCorrectionCode
 from Chamaeleo.utils import data_handle, indexer
 from Chamaeleo.utils.monitor import Monitor
+from terminaltables import AsciiTable
 
 
 class DefaultPipeline(object):
@@ -66,6 +66,9 @@ class TranscodePipeline(DefaultPipeline):
                 elif "input_string" in info:
                     bit_segments, bit_size = data_handle.read_bits_from_str(info["input_string"], segment_length,
                                                                             self.need_logs)
+                elif "input_stream" in info:
+                    bit_segments, bit_size = data_handle.read_bits_from_stream(info["input_stream"], segment_length,
+                                                                               self.need_logs)
                 else:
                     raise ValueError("There is no digital data input here!")
 
@@ -97,6 +100,8 @@ class TranscodePipeline(DefaultPipeline):
 
                 if "output_path" in info:
                     data_handle.write_dna_file(info["output_path"], dna_sequences, self.need_logs)
+                elif "output_stream" in info:
+                    data_handle.write_dna_stream(info["output_stream"], dna_sequences, self.need_logs)
 
                 return {"bit": original_bit_segments, "dna": dna_sequences}
             elif info["direction"] == "t_s":
@@ -106,6 +111,8 @@ class TranscodePipeline(DefaultPipeline):
                     dna_sequences = []
                     for index, string in enumerate(info["input_string"]):
                         dna_sequences.append(string)
+                elif "input_stream" in info:
+                    dna_sequences = data_handle.read_dna_stream(info["input_stream"], self.need_logs)
                 else:
                     raise ValueError("There is no digital data input here!")
 

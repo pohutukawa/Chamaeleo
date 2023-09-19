@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Backup files
+*.bak
+*~
+
 # C extensions
 *.so
 
@@ -96,6 +100,10 @@ venv.bak/
 
 # Rope project settings
 .ropeproject
+
+# Eclipse/PyDev settings
+.project
+.pydevproject
 
 # mkdocs documentation
 /site

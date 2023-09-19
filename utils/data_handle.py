@@ -1,7 +1,9 @@
 import gzip
+import io
+from numpy import fromfile, array, uint8
 import pickle
 import struct
-from numpy import fromfile, array, uint8
+
 from Chamaeleo.utils.monitor import Monitor
 
 
@@ -88,6 +90,37 @@ def read_bits_from_file(path, segment_length=120, need_logs=True):
     return matrix.tolist(), len(values) * 8
 
 
+def read_bits_from_stream(stream: io.BytesIO, segment_length=120, need_logs=True):
+    monitor = Monitor()
+    size = 0
+    if need_logs:
+        print("Read binary matrix from I/O stream.")
+        size = stream.seek(0, io.SEEK_END)
+        stream.seek(0)
+
+    matrix, current = [], 0
+
+    value = stream.read(1)
+    while value:
+        matrix += list(map(int, "{:08b}".format(ord(value))))
+        value = stream.read(1)
+        if need_logs:
+            monitor.output(current + 1, size)
+    size = len(matrix)
+    if size % segment_length:
+        matrix += [0] * (segment_length - len(matrix) % segment_length)
+
+    matrix = array(matrix)
+    matrix = matrix.reshape(int(len(matrix) / segment_length), segment_length)
+
+    if need_logs:
+        print(f"There are {size} bits in the input data stream."
+              " Please keep this information in mind if you do not"
+              " consider storing the model in serialization!")
+
+    return matrix.tolist(), size * 8
+
+
 def write_bits_to_file(path, matrix, bit_size, need_logs=True):
     monitor = Monitor()
 
@@ -101,6 +134,22 @@ def write_bits_to_file(path, matrix, bit_size, need_logs=True):
 
             if need_logs:
                 monitor.output(int(position / 8 + 1), int(bit_size / 8))
+
+    return True
+
+
+def write_bits_to_stream(stream: io.BytesIO, matrix, bit_size, need_logs=True):
+    monitor = Monitor()
+
+    if need_logs:
+        print("Write stream from binary matrix")
+
+    matrix = array(matrix).reshape(-1)
+    for position in range(0, bit_size, 8):
+        stream.write(struct.pack("B", int("".join(list(map(str, matrix[position: position + 8]))), 2)))
+
+        if need_logs:
+            monitor.output(int(position / 8 + 1), int(bit_size / 8))
 
     return True
 
@@ -126,6 +175,26 @@ def read_dna_file(path, need_logs=True):
     return dna_sequences
 
 
+def read_dna_stream(stream: io.BytesIO, need_logs=True):
+    monitor = Monitor()
+
+    dna_sequences = []
+
+    if need_logs:
+        print("Read DNA sequences from stream")
+
+    # Read current file by line
+    lines = stream.readlines()
+
+    for index, line in enumerate(lines):
+        dna_sequences.append(list(line.decode("utf-8").strip()))
+
+        if need_logs:
+            monitor.output(index + 1, len(lines))
+
+    return dna_sequences
+
+
 def write_dna_file(path, dna_sequences, need_logs=False):
     monitor = Monitor()
 
@@ -138,6 +207,21 @@ def write_dna_file(path, dna_sequences, need_logs=False):
 
             if need_logs:
                 monitor.output(index + 1, len(dna_sequences))
+
+    return True
+
+
+def write_dna_stream(stream: io.BytesIO, dna_sequences, need_logs=False):
+    monitor = Monitor()
+
+    if need_logs:
+        print("Write DNA sequences to stream")
+
+    for index, dna_sequence in enumerate(dna_sequences):
+        stream.write(("".join(dna_sequence) + "\n").encode("utf-8"))
+
+        if need_logs:
+            monitor.output(index + 1, len(dna_sequences))
 
     return True
 

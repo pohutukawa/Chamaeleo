@@ -10,3 +10,5 @@ Step 3: using **demo_case_robustness.py** to learn how to evaluate the robustnes
 Step 4: using **demo_case_basic_feature.py** to learn how to calculate the basic features of DNA sequences encoded by different coding schemes.
 
 Step 5: using **demo_case_best_choice.py** to learn how to find the best choice in different coding schemes.
+
+Step 6: using **demo_case_transcode_stream.py** to learn how to allow for stream-based (as opposed to file-based) data to be en-/decoded.
